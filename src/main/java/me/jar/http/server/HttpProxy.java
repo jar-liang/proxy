@@ -9,6 +9,7 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.http.HttpRequestDecoder;
+import io.netty.handler.codec.http.HttpResponseEncoder;
 import me.jar.http.handler.HttpServerHandler;
 
 /**
@@ -34,6 +35,7 @@ public class HttpProxy {
                             ChannelPipeline pipeline = ch.pipeline();
                             // 添加一系列handler
                             pipeline.addLast(new HttpRequestDecoder());
+                            pipeline.addLast(new HttpResponseEncoder());
                             pipeline.addLast(new HttpServerHandler());
                         }
                     });
