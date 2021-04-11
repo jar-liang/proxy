@@ -1,4 +1,4 @@
-package me.jar.proxyhttpgetv2;
+package me.jar.proxyhttp;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.Unpooled;
@@ -13,7 +13,6 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpHeaderNames;
-import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequestEncoder;
 import io.netty.handler.codec.http.HttpResponseDecoder;
 
@@ -33,10 +32,6 @@ public class SendHandler extends ChannelInboundHandlerAdapter {
         // 目前只处理Http请求的GET方法，其他方法暂不处理
         if (msg instanceof FullHttpRequest) {
             FullHttpRequest fullHttpRequest = (FullHttpRequest) msg;
-            if (!HttpMethod.GET.equals(fullHttpRequest.method())) {
-                System.out.println("不是GET请求...");
-                return;
-            }
             // 根据请求头的Host属性获取 host和port
             int port = 80;
             String host = fullHttpRequest.headers().get(HttpHeaderNames.HOST);
@@ -54,7 +49,7 @@ public class SendHandler extends ChannelInboundHandlerAdapter {
                 System.out.println(key + ": " + value);
             }
             System.out.println("****************************请求头结束***********************************");
-            System.out.println("host->" + host + ", port->" + port + ", uri->" +fullHttpRequest.uri());
+            System.out.println("host->" + host + ", port->" + port + ", method-> " + fullHttpRequest.method().asciiName() + ", uri->" +fullHttpRequest.uri());
             final String connectHost = host;
             final int connectPort = port;
             // 将连接远端服务器、转发请求、转发响应放到该Channel所在的eventLoop中执行，提高响应速度

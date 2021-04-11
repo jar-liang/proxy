@@ -1,4 +1,4 @@
-package me.jar.proxyhttpgetv2;
+package me.jar.proxyhttp;
 
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;

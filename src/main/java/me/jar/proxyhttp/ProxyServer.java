@@ -1,4 +1,4 @@
-package me.jar.proxyhttpgetv2;
+package me.jar.proxyhttp;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
