@@ -15,6 +15,10 @@ import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequestEncoder;
+import io.netty.handler.codec.http.HttpResponseDecoder;
+
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * @Description 消息发送处理器
@@ -41,8 +45,16 @@ public class SendHandler extends ChannelInboundHandlerAdapter {
                 host = split[0];
                 port = Integer.parseInt(split[1]);
             }
-            System.out.println("full http request->" + fullHttpRequest.uri());
-            System.out.println("host->" + host + ", port->" + port);
+            System.out.println("****************************请求头开始***********************************");
+            Iterator<Map.Entry<String, String>> entryIterator = fullHttpRequest.headers().iteratorAsString();
+            while (entryIterator.hasNext()) {
+                Map.Entry<String, String> next = entryIterator.next();
+                String key = next.getKey();
+                String value = next.getValue();
+                System.out.println(key + ": " + value);
+            }
+            System.out.println("****************************请求头结束***********************************");
+            System.out.println("host->" + host + ", port->" + port + ", uri->" +fullHttpRequest.uri());
             final String connectHost = host;
             final int connectPort = port;
             // 将连接远端服务器、转发请求、转发响应放到该Channel所在的eventLoop中执行，提高响应速度
@@ -50,6 +62,11 @@ public class SendHandler extends ChannelInboundHandlerAdapter {
         } else {
             System.out.println("other msg");
         }
+    }
+
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) {
+        System.out.println("client channel 关闭...");
     }
 
     @Override
@@ -82,7 +99,8 @@ public class SendHandler extends ChannelInboundHandlerAdapter {
                         ChannelPipeline pipeline = ch.pipeline();
                         // 将http请求编码
                         pipeline.addLast("encoder", new HttpRequestEncoder());
-                        // 接收远端服务器返回的消息，并返回给客户端（目前不需要其他处理，因此不用加response相关的解编码器）
+                        pipeline.addLast("decoder", new HttpResponseDecoder());
+                        // 接收远端服务器返回的消息，并返回给客户端
                         pipeline.addLast("receiveHandler", new ReceiveHandler(clientChannel));
                     }
                 });
