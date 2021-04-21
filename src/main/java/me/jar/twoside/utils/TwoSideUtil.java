@@ -10,7 +10,11 @@ import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.util.CharsetUtil;
 import me.jar.twoside.bean.HostAndPort;
+
+import java.io.UnsupportedEncodingException;
+import java.security.GeneralSecurityException;
 
 /**
  * @Description
@@ -19,6 +23,8 @@ import me.jar.twoside.bean.HostAndPort;
 public final class TwoSideUtil {
     private TwoSideUtil() {
     }
+
+
 
     public static void closeOnFlush(Channel channel) {
         if (channel != null && channel.isActive()) {
@@ -65,9 +71,15 @@ public final class TwoSideUtil {
         }
     }
 
-    public static void main(String[] args) {
-        String line = "aaa:443";
-        HostAndPort hostAndPort = parseHostAndPort(line);
-        System.out.println(hostAndPort);
+    public static void main(String[] args) throws GeneralSecurityException, UnsupportedEncodingException {
+        String text = "hello world";
+        String key = "0123456789abcdef0123456789abcdef";
+        byte[] textBytes = text.getBytes(CharsetUtil.UTF_8);
+        System.out.println("原文字节数组长度->" + textBytes.length);
+        byte[] encrypt = AESUtil.encrypt(textBytes, key);
+        System.out.println("加密字节数组长度->" + encrypt.length);
+        byte[] decrypt = AESUtil.decrypt(encrypt, key);
+        System.out.println("解密字节数组长度->" + decrypt.length);
+        System.out.println("原文->" + new String(decrypt, CharsetUtil.UTF_8));
     }
 }
