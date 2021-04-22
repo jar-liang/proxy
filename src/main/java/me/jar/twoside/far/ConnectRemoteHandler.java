@@ -31,39 +31,46 @@ public class ConnectRemoteHandler extends ChannelInboundHandlerAdapter {
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         if (msg instanceof FullHttpRequest) {
             FullHttpRequest httpRequest = (FullHttpRequest) msg;
+            System.out.println(">>>收到http请求，uri->" + httpRequest.uri());
             if (HttpMethod.CONNECT.equals(httpRequest.method())) {
-                HostAndPort hostAndPort = TwoSideUtil.parseHostAndPort(httpRequest.uri(), 443);
-                Bootstrap bootstrap = new Bootstrap();
-                bootstrap.group(ctx.channel().eventLoop()).channel(NioSocketChannel.class)
-                    .option(ChannelOption.SO_KEEPALIVE, true)
-                    .handler(new ChannelInitializer<SocketChannel>() {
-                        @Override
-                        protected void initChannel(SocketChannel ch) {
-                            ChannelPipeline pipeline = ch.pipeline();
-                            pipeline.addLast("receive", new ReceiveRemoteHandler(ctx.channel()));
-                        }
-                    });
-                bootstrap.connect(hostAndPort.getHost(), hostAndPort.getPort()).addListener((ChannelFutureListener) future -> {
-                    if (future.isSuccess()) {
-                        System.out.println(">>>连接远端服务器完成(https)");
-                        Channel remoteChannel = future.channel();
-                        ChannelPipeline nearPipeline = ctx.channel().pipeline();
-                        ByteBuf response = Unpooled.copiedBuffer("HTTP/1.1 200 Connection Established\r\n\r\n", CharsetUtil.ISO_8859_1);
-                        ctx.writeAndFlush(response).addListener((ChannelFutureListener) replyFuture -> {
-                            if (replyFuture.isSuccess()) {
-                                System.out.println("<<<已回复客户端隧道已建立");
-                                nearPipeline.remove("decoder");
-                                nearPipeline.remove("aggregator");
-                                nearPipeline.remove("connectRemote");
-                                nearPipeline.addLast("justSend", new JustSendHandler(remoteChannel));
-                            }
-                        });
-                    }
-                });
+                connectRemoteReplyNear(ctx, httpRequest);
             } else {
                 sendRemote(ctx, httpRequest);
             }
+        } else {
+            System.out.println(">>>收到其他类型的数据->" + msg.getClass());
         }
+    }
+
+    private void connectRemoteReplyNear(ChannelHandlerContext ctx, FullHttpRequest httpRequest) {
+        HostAndPort hostAndPort = TwoSideUtil.parseHostAndPort(httpRequest.uri(), 443);
+        Bootstrap bootstrap = new Bootstrap();
+        bootstrap.group(ctx.channel().eventLoop()).channel(NioSocketChannel.class)
+            .option(ChannelOption.SO_KEEPALIVE, true)
+            .handler(new ChannelInitializer<SocketChannel>() {
+                @Override
+                protected void initChannel(SocketChannel ch) {
+                    ChannelPipeline pipeline = ch.pipeline();
+                    pipeline.addLast("receive", new ReceiveRemoteHandler(ctx.channel()));
+                }
+            });
+        bootstrap.connect(hostAndPort.getHost(), hostAndPort.getPort()).addListener((ChannelFutureListener) future -> {
+            if (future.isSuccess()) {
+                System.out.println(">>>连接远端服务器完成(https)");
+                Channel remoteChannel = future.channel();
+                ChannelPipeline nearPipeline = ctx.channel().pipeline();
+                ByteBuf response = Unpooled.copiedBuffer("HTTP/1.1 200 Connection Established\r\n\r\n", CharsetUtil.ISO_8859_1);
+                ctx.writeAndFlush(response).addListener((ChannelFutureListener) replyFuture -> {
+                    if (replyFuture.isSuccess()) {
+                        System.out.println("<<<已回复客户端隧道已建立");
+                        nearPipeline.remove("decoder");
+                        nearPipeline.remove("aggregator");
+                        nearPipeline.remove("connectRemote");
+                        nearPipeline.addLast("justSend", new JustSendHandler(remoteChannel));
+                    }
+                });
+            }
+        });
     }
 
     private void sendRemote(ChannelHandlerContext ctx, FullHttpRequest httpRequest) {
