@@ -5,6 +5,7 @@ import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpRequestDecoder;
+import io.netty.handler.codec.http.HttpResponseEncoder;
 import me.jar.twoside.utils.TwoSideUtil;
 
 /**
@@ -23,7 +24,7 @@ public class FarServer {
             @Override
             protected void initChannel(SocketChannel ch) {
                 ChannelPipeline pipeline = ch.pipeline();
-                pipeline.addLast("codec", new HttpRequestDecoder());
+                pipeline.addLast("decoder", new HttpRequestDecoder());
                 pipeline.addLast("aggregator", new HttpObjectAggregator(20 * 1024 * 1024));
                 pipeline.addLast("connectRemote", new ConnectRemoteHandler());
             }

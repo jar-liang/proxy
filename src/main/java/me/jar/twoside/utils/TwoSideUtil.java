@@ -32,8 +32,8 @@ public final class TwoSideUtil {
         }
     }
 
-    public static HostAndPort parseHostAndPort(String message) {
-        int port = 80;
+    public static HostAndPort parseHostAndPort(String message, int defaultPort) {
+        int port = defaultPort;
         if (message == null || message.length() == 0) {
             return new HostAndPort("", port);
         }
