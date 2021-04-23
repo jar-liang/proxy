@@ -1,15 +1,20 @@
 package me.jar.twoside.near;
 
 import io.netty.bootstrap.Bootstrap;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
+import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.DelimiterBasedFrameDecoder;
 import me.jar.twoside.constant.ProxyConstants;
+import me.jar.twoside.utils.DecryptHandler;
+import me.jar.twoside.utils.EncryptHandler;
 import me.jar.twoside.utils.TwoSideUtil;
 
 /**
@@ -35,7 +40,11 @@ public class ConnectFarHandler extends ChannelInboundHandlerAdapter {
                 .handler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel ch) {
-                        ch.pipeline().addLast("receiveFar", new ReceiveFarHandler(ctx.channel()));
+                        ChannelPipeline pipeline = ch.pipeline();
+                        pipeline.addLast("delimiter", new DelimiterBasedFrameDecoder(ProxyConstants.MAX_FRAME_LENGTH, Unpooled.wrappedBuffer(ProxyConstants.DELIMITER)));
+                        pipeline.addLast("decrypt", new DecryptHandler());
+                        pipeline.addLast("encrypt", new EncryptHandler());
+                        pipeline.addLast("receiveFar", new ReceiveFarHandler(ctx.channel()));
                     }
                 });
             bootstrap.connect(ProxyConstants.FAR_SERVER_HOST, ProxyConstants.FAR_SERVER_PORT).addListener((ChannelFutureListener) connectFuture -> {
