@@ -1,0 +1,15 @@
+本模块是http代理的服务端模块。
+需实现的功能：
+1.http和https的代理功能
+2.与客户端模块之间的加解密交换数据功能
+3.使用配置文件读取参数 （涉及密码的，加密后再写入配置文件，设置系统变量，保存key，运行时解密，获取到密码）
+4.使用Log4j做日志实现
+5.打成可运行jar包，直接在服务器上运行
+
+配置文件：
+Windows放在 D:\usr\property\property.txt
+Linux放在 /usr/property/property.txt
+
+生成的日志文件在
+Windows  D:\usr\log\下面
+Linux /usr/log/ 下面 （未测试）
