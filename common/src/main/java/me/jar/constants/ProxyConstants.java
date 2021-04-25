@@ -10,8 +10,6 @@ import java.util.Map;
  */
 public interface ProxyConstants {
 
-    String PASSWORD = "0123456789abcdef0123456789abcdef";
-
     byte[] DELIMITER = new byte[] {13, 13, 13, 13, 10, 10, 10, 10};
 
     int MAX_FRAME_LENGTH = 128 * 1024;
