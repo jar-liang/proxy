@@ -36,9 +36,8 @@ public class ServerStarter {
     }
 
     public static void main(String[] args) {
-        Map<String, String> property = PlatformUtil.getProperty();
-        if (property.containsKey(ProxyConstants.KEY_NAME_PORT)) {
-            String port = property.get(ProxyConstants.KEY_NAME_PORT);
+        if (ProxyConstants.PROPERTY.containsKey(ProxyConstants.KEY_NAME_PORT)) {
+            String port = ProxyConstants.PROPERTY.get(ProxyConstants.KEY_NAME_PORT);
             try {
                 int portNum = Integer.parseInt(port.trim());
                 new ServerStarter(portNum).run();
