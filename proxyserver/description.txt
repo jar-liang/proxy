@@ -17,3 +17,6 @@ Linux /usr/log/ 下面 （未测试）
 服务端开发完成。发现两个问题：
 1.LEAK: ByteBuf.release() was not called before it's garbage-collected  内存泄漏问题
 2.远端和近端保持连接的通道数过多，可能会占用过多资源（考虑重用通道？或者及时关闭通道？）
+
+问题：
+3.如果请求不停地发，解密失败，会出现超高占用CPU的问题。计划通过插入特定的标识识别合法客户端。

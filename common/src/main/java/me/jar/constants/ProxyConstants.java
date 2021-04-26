@@ -12,6 +12,11 @@ public interface ProxyConstants {
 
     byte[] DELIMITER = new byte[] {13, 13, 13, 13, 10, 10, 10, 10};
 
+    /**
+     * 特定标识字节，用于标识数据流是否合法源发出
+     */
+    byte[] MARK_BYTE = new byte[] {8, 8, 8, 8};
+
     int MAX_FRAME_LENGTH = 128 * 1024;
 
     int WIN_OS = 1;

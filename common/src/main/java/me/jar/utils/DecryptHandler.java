@@ -31,13 +31,26 @@ public class DecryptHandler extends ByteToMessageDecoder {
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) {
-        byte[] encryptSource = new byte[in.readableBytes()];
-        in.readBytes(encryptSource);
+        // 先判断是否有特定标识字节，没有则直接关闭通道
+        byte[] markBytes = new byte[4];
+        int readableBytes = in.readableBytes();
+        in.getBytes(readableBytes - 4, markBytes);
+        for (int i = 0; i < markBytes.length; i++) {
+            if (markBytes[i] != 8) {
+                LOGGER.info("===Illegal data from ip: {}", ctx.channel().remoteAddress());
+                in.readerIndex(in.writerIndex());
+                ctx.close();
+                return;
+            }
+        }
+        byte[] encryptSource = new byte[readableBytes - 4];
+        in.readBytes(encryptSource, 0, readableBytes - 4);
+        in.readerIndex(in.writerIndex());
         try {
             byte[] decryptBytes = AESUtil.decrypt(encryptSource, password);
             out.add(Unpooled.wrappedBuffer(decryptBytes));
         } catch (GeneralSecurityException | UnsupportedEncodingException e) {
-            LOGGER.error("===Decrypt data failed", e);
+            LOGGER.error("===Decrypt data failed. detail: {}", e.getMessage());
             ctx.close();
         }
     }
