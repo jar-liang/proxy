@@ -5,6 +5,8 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
 import me.jar.constants.ProxyConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.UnsupportedEncodingException;
 import java.security.GeneralSecurityException;
@@ -14,6 +16,8 @@ import java.security.GeneralSecurityException;
  * @Date 2021/4/23-19:59
  */
 public class EncryptHandler extends MessageToByteEncoder<ByteBuf> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(EncryptHandler.class);
+
     private String password;
 
     public EncryptHandler() {
@@ -33,7 +37,8 @@ public class EncryptHandler extends MessageToByteEncoder<ByteBuf> {
             ByteBuf wrappedBuffer = Unpooled.wrappedBuffer(encrypt, ProxyConstants.DELIMITER);
             out.writeBytes(wrappedBuffer);
         } catch (GeneralSecurityException | UnsupportedEncodingException e) {
-            e.printStackTrace();
+            LOGGER.error("===Decrypt data failed", e);
+            ctx.close();
         }
     }
 }
