@@ -10,21 +10,21 @@ import org.slf4j.LoggerFactory;
 
 /**
  * @Description
- * @Date 2021/4/26-0:07
+ * @Date 2021/4/27-22:17
  */
-public class ReceiveRemoteHandler extends ChannelInboundHandlerAdapter {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ReceiveRemoteHandler.class);
+public class ReceiveFarHandler extends ChannelInboundHandlerAdapter {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ReceiveFarHandler.class);
 
-    private final Channel nearChannel;
+    private final Channel clientChannel;
 
-    public ReceiveRemoteHandler(Channel nearChannel) {
-        this.nearChannel = nearChannel;
+    public ReceiveFarHandler(Channel clientChannel) {
+        this.clientChannel = clientChannel;
     }
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
-        if (nearChannel.isActive()) {
-            nearChannel.writeAndFlush(msg).addListener((ChannelFutureListener) future -> {
+        if (clientChannel.isActive()) {
+            clientChannel.writeAndFlush(msg).addListener((ChannelFutureListener) future -> {
                 if (future.isSuccess()) {
                     LOGGER.debug("<<<Has been replying response data to client");
                 }
@@ -37,15 +37,15 @@ public class ReceiveRemoteHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
-        LOGGER.info("===Remote channel disconnected");
-        NettyUtil.closeOnFlush(nearChannel);
+        LOGGER.info("===Far channel disconnected");
+        NettyUtil.closeOnFlush(clientChannel);
         ctx.close();
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         LOGGER.error("===ReceiveRemoteHandler caught exception, cause: {}", cause.getMessage());
-        NettyUtil.closeOnFlush(nearChannel);
+        NettyUtil.closeOnFlush(clientChannel);
         ctx.close();
     }
 }

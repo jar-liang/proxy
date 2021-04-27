@@ -34,4 +34,8 @@ public interface ProxyConstants {
     Map<String, String> PROPERTY = PlatformUtil.getProperty();
 
     String PROPERTY_NAME_KEY = "key";
+
+    String FAR_SERVER_IP = "far.ip";
+
+    String FAR_SERVER_PORT = "far.port";
 }
