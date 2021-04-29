@@ -56,6 +56,7 @@ public final class NettyUtil {
         try {
             ServerBootstrap serverBootstrap = new ServerBootstrap();
             serverBootstrap.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class)
+                    .childOption(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000)
                     .childOption(ChannelOption.SO_KEEPALIVE, true)
                     .childHandler(chanelInitializer);
             ChannelFuture cf = serverBootstrap.bind(port).sync();

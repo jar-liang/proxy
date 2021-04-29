@@ -51,6 +51,7 @@ public class ConnectRemoteHandler extends ChannelInboundHandlerAdapter {
         Bootstrap bootstrap = new Bootstrap();
         bootstrap.group(ctx.channel().eventLoop()).channel(NioSocketChannel.class)
                 .option(ChannelOption.SO_KEEPALIVE, true)
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000)
                 .handler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel ch) {
@@ -71,8 +72,13 @@ public class ConnectRemoteHandler extends ChannelInboundHandlerAdapter {
                         nearPipeline.remove("aggregator");
                         nearPipeline.remove("connectRemote");
                         nearPipeline.addLast("justSend", new JustSendHandler(remoteChannel));
+                    } else {
+                        LOGGER.error("<<<Reply to client message failed!");
                     }
                 });
+            } else {
+                LOGGER.error("<<<Connecting server failed (https)!");
+                ctx.close();
             }
         });
     }
@@ -82,6 +88,8 @@ public class ConnectRemoteHandler extends ChannelInboundHandlerAdapter {
             remoteChannel.writeAndFlush(httpRequest).addListener((ChannelFutureListener) future -> {
                 if (future.isSuccess()) {
                     LOGGER.debug(">>>Sending request to server done (via exist channel).");
+                } else {
+                    LOGGER.error("<<<Sending request to server failed (via exist channel)!");
                 }
             });
         } else {
@@ -91,6 +99,7 @@ public class ConnectRemoteHandler extends ChannelInboundHandlerAdapter {
             Bootstrap bootstrap = new Bootstrap();
             bootstrap.group(ctx.channel().eventLoop()).channel(NioSocketChannel.class)
                     .option(ChannelOption.SO_KEEPALIVE, true)
+                    .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000)
                     .handler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         protected void initChannel(SocketChannel ch) {
@@ -106,8 +115,13 @@ public class ConnectRemoteHandler extends ChannelInboundHandlerAdapter {
                     remoteChannel.writeAndFlush(httpRequest).addListener((ChannelFutureListener) future -> {
                         if (future.isSuccess()) {
                             LOGGER.debug(">>>Sending request to server done.");
+                        } else {
+                            LOGGER.error("<<<Sending request to server failed!");
                         }
                     });
+                } else {
+                    LOGGER.error("<<<Connecting server failed!");
+                    ctx.close();
                 }
             });
         }

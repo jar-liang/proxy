@@ -4,6 +4,7 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.util.ReferenceCountUtil;
 import me.jar.utils.NettyUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,10 +28,14 @@ public class JustSendHandler extends ChannelInboundHandlerAdapter {
             remoteChannel.writeAndFlush(msg).addListener((ChannelFutureListener) future -> {
                 if (future.isSuccess()) {
                     LOGGER.debug("<<<Has been replying request data (https) to remote");
+                } else {
+                    LOGGER.error("===Failed to send client data(https) to remote!");
+                    ReferenceCountUtil.release(msg);
                 }
             });
         } else {
             LOGGER.info("===Remote channel disconnected, no transferring data.");
+            ReferenceCountUtil.release(msg);
             ctx.close();
         }
     }

@@ -12,6 +12,7 @@ import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.DelimiterBasedFrameDecoder;
+import io.netty.util.ReferenceCountUtil;
 import me.jar.constants.ProxyConstants;
 import me.jar.utils.DecryptHandler;
 import me.jar.utils.EncryptHandler;
@@ -35,11 +36,14 @@ public class ConnectFarHandler extends ChannelInboundHandlerAdapter {
             farChannel.writeAndFlush(msg).addListener((ChannelFutureListener) future -> {
                 if (future.isSuccess()) {
                     LOGGER.debug(">>>Data has been sent to far server(via connected channel).");
+                } else {
+                    LOGGER.error("===Failed to send data to far server(via connected channel)!");
                 }
             });
         } else {
             if (!ProxyConstants.PROPERTY.containsKey(ProxyConstants.FAR_SERVER_IP) || !ProxyConstants.PROPERTY.containsKey(ProxyConstants.KEY_NAME_PORT)) {
                 LOGGER.error("===Property file has no far server ip or port, please check!");
+                ReferenceCountUtil.release(msg);
                 ctx.close();
                 return;
             }
@@ -47,6 +51,7 @@ public class ConnectFarHandler extends ChannelInboundHandlerAdapter {
             Bootstrap bootstrap = new Bootstrap();
             bootstrap.group(ctx.channel().eventLoop()).channel(NioSocketChannel.class)
                 .option(ChannelOption.SO_KEEPALIVE, true)
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000)
                 .handler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel ch) {
@@ -54,7 +59,7 @@ public class ConnectFarHandler extends ChannelInboundHandlerAdapter {
                         pipeline.addLast("delimiter", new DelimiterBasedFrameDecoder(ProxyConstants.MAX_FRAME_LENGTH, Unpooled.wrappedBuffer(ProxyConstants.DELIMITER)));
                         pipeline.addLast("decrypt", new DecryptHandler());
                         pipeline.addLast("encrypt", new EncryptHandler());
-                            pipeline.addLast("receiveFar", new ReceiveFarHandler(ctx.channel()));
+                        pipeline.addLast("receiveFar", new ReceiveFarHandler(ctx.channel()));
                     }
                 });
             bootstrap.connect(ProxyConstants.PROPERTY.get(ProxyConstants.FAR_SERVER_IP), Integer.parseInt(ProxyConstants.PROPERTY.get(ProxyConstants.FAR_SERVER_PORT)))
@@ -65,8 +70,14 @@ public class ConnectFarHandler extends ChannelInboundHandlerAdapter {
                         farChannel.writeAndFlush(msg).addListener((ChannelFutureListener) future -> {
                             if (future.isSuccess()) {
                                 LOGGER.debug(">>>Data has been sent to far server(via just created channel).");
+                            } else {
+                                LOGGER.error("===Data send to far server failed(via just created channel)!");
                             }
                         });
+                    } else {
+                        LOGGER.error("===Failed to connect to far server!");
+                        ReferenceCountUtil.release(msg);
+                        ctx.close();
                     }
                 });
         }
