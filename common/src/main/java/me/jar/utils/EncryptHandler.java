@@ -35,7 +35,8 @@ public class EncryptHandler extends MessageToByteEncoder<ByteBuf> {
         try {
             byte[] encrypt = AESUtil.encrypt(sourceBytes, password);
             // fix: 添加特定标识字节，防止解密端不停解密导致CPU占用过高
-            ByteBuf wrappedBuffer = Unpooled.wrappedBuffer(encrypt, ProxyConstants.MARK_BYTE, ProxyConstants.DELIMITER);
+            ByteBuf wrappedBuffer = Unpooled.wrappedBuffer(encrypt, ProxyConstants.MARK_BYTE);
+            out.writeInt(wrappedBuffer.readableBytes());
             out.writeBytes(wrappedBuffer);
         } catch (GeneralSecurityException | UnsupportedEncodingException e) {
             LOGGER.error("===Decrypt data failed. detail: {}", e.getMessage());

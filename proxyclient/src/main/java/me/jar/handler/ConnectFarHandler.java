@@ -1,7 +1,6 @@
 package me.jar.handler;
 
 import io.netty.bootstrap.Bootstrap;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
@@ -11,7 +10,6 @@ import io.netty.channel.ChannelOption;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.codec.DelimiterBasedFrameDecoder;
 import io.netty.util.ReferenceCountUtil;
 import me.jar.constants.ProxyConstants;
 import me.jar.utils.DecryptHandler;
@@ -56,7 +54,6 @@ public class ConnectFarHandler extends ChannelInboundHandlerAdapter {
                     @Override
                     protected void initChannel(SocketChannel ch) {
                         ChannelPipeline pipeline = ch.pipeline();
-                        pipeline.addLast("delimiter", new DelimiterBasedFrameDecoder(ProxyConstants.MAX_FRAME_LENGTH, Unpooled.wrappedBuffer(ProxyConstants.DELIMITER)));
                         pipeline.addLast("decrypt", new DecryptHandler());
                         pipeline.addLast("encrypt", new EncryptHandler());
                         pipeline.addLast("receiveFar", new ReceiveFarHandler(ctx.channel()));

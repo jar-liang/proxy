@@ -1,10 +1,8 @@
 package me.jar.starter;
 
-import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
-import io.netty.handler.codec.DelimiterBasedFrameDecoder;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpRequestDecoder;
 import me.jar.constants.ProxyConstants;
@@ -34,7 +32,6 @@ public class ServerStarter {
             protected void initChannel(SocketChannel ch) {
                 ChannelPipeline pipeline = ch.pipeline();
                 // 添加与客户端交互的handler
-                pipeline.addLast("delimiter", new DelimiterBasedFrameDecoder(ProxyConstants.MAX_FRAME_LENGTH, Unpooled.wrappedBuffer(ProxyConstants.DELIMITER)));
                 pipeline.addLast("decrypt", new DecryptHandler());
                 pipeline.addLast("decoder", new HttpRequestDecoder());
                 pipeline.addLast("aggregator", new HttpObjectAggregator(20 * 1024 * 1024));
