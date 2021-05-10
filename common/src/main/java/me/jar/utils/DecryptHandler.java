@@ -4,6 +4,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ReplayingDecoder;
+import io.netty.util.ReferenceCountUtil;
 import me.jar.constants.DecryptDecoderState;
 import me.jar.constants.ProxyConstants;
 import org.slf4j.Logger;
@@ -40,26 +41,30 @@ public class DecryptHandler extends ReplayingDecoder<DecryptDecoderState> {
                 checkpoint(DecryptDecoderState.READ_CONTENT);
             case READ_CONTENT:
                 ByteBuf byteBuf = in.readBytes(length);
-                checkpoint(DecryptDecoderState.READ_LENGTH);
-                // 先判断是否有特定标识字节，没有则直接关闭通道
-                byte[] markBytes = new byte[4];
-                int readableBytes = byteBuf.readableBytes();
-                byteBuf.getBytes(readableBytes - 4, markBytes);
-                for (int i = 0; i < markBytes.length; i++) {
-                    if (markBytes[i] != 8) {
-                        LOGGER.info("===Illegal data from ip: {}", ctx.channel().remoteAddress());
-                        ctx.close();
-                        return;
-                    }
-                }
-                byte[] encryptSource = new byte[readableBytes - 4];
-                byteBuf.readBytes(encryptSource, 0, readableBytes - 4);
                 try {
-                    byte[] decryptBytes = AESUtil.decrypt(encryptSource, password);
-                    out.add(Unpooled.wrappedBuffer(decryptBytes));
-                } catch (GeneralSecurityException | UnsupportedEncodingException e) {
-                    LOGGER.error("===Decrypt data failed. detail: {}", e.getMessage());
-                    ctx.close();
+                    checkpoint(DecryptDecoderState.READ_LENGTH);
+                    // 先判断是否有特定标识字节，没有则直接关闭通道
+                    byte[] markBytes = new byte[4];
+                    int readableBytes = byteBuf.readableBytes();
+                    byteBuf.getBytes(readableBytes - 4, markBytes);
+                    for (int i = 0; i < markBytes.length; i++) {
+                        if (markBytes[i] != 8) {
+                            LOGGER.info("===Illegal data from ip: {}", ctx.channel().remoteAddress());
+                            ctx.close();
+                            return;
+                        }
+                    }
+                    byte[] encryptSource = new byte[readableBytes - 4];
+                    byteBuf.readBytes(encryptSource, 0, readableBytes - 4);
+                    try {
+                        byte[] decryptBytes = AESUtil.decrypt(encryptSource, password);
+                        out.add(Unpooled.wrappedBuffer(decryptBytes));
+                    } catch (GeneralSecurityException | UnsupportedEncodingException e) {
+                        LOGGER.error("===Decrypt data failed. detail: {}", e.getMessage());
+                        ctx.close();
+                    }
+                } finally {
+                    ReferenceCountUtil.release(byteBuf);
                 }
                 break;
             default:
