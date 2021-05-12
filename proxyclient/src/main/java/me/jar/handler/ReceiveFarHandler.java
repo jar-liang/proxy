@@ -1,7 +1,6 @@
 package me.jar.handler;
 
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.util.ReferenceCountUtil;
@@ -25,13 +24,7 @@ public class ReceiveFarHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         if (clientChannel.isActive()) {
-            clientChannel.writeAndFlush(msg).addListener((ChannelFutureListener) future -> {
-                if (future.isSuccess()) {
-                    LOGGER.debug("<<<Has been replying response data to client");
-                } else {
-                    LOGGER.error("===Failed to reply response data to client!");
-                }
-            });
+            clientChannel.writeAndFlush(msg);
         } else {
             LOGGER.error("===Client channel disconnected, no transferring data.");
             ReferenceCountUtil.release(msg);
